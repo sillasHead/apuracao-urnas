@@ -24,5 +24,26 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Smoke test official TSE source
+        run: |
+          node --input-type=module <<'NODE'
+          const url = "https://resultados.tse.jus.br/oficial/ele2026/6257/dados/br/br-c0001-e006257-u.json";
+          const response = await fetch(url, { headers: { accept: "application/json" } });
+
+          if (!response.ok) {
+            throw new Error(`TSE returned HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (!Array.isArray(data.carg) || !data.s) {
+            throw new Error("Unexpected EA20 payload shape");
+          }
+
+          console.log(
+            `TSE EA20 OK — idg=${data.idg ?? "?"} — apurado=${data.s.pst ?? "?"}%`,
+          );
+          NODE
+
       - name: Build
         run: npm run build
